@@ -60,7 +60,7 @@ function CreateAssistant() {
         </div>
       </div>
 
-      {/* Onboarding Wizard */}
+      {/* Onboarding Wizard  */}
       <OnboardingWizard />
     </div>
   );
