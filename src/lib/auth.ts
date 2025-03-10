@@ -4,7 +4,7 @@ import { User } from '@supabase/supabase-js';
 export async function signInWithGoogle() {
   try {
     const origin = window.location.origin;
-    const redirectUrl = `${origin}/my-assistant`;
+    const redirectUrl = `${origin}/create-assistant`;
 
     console.log('Starting Google sign in...');
     console.log('Redirect URL:', redirectUrl);
@@ -124,7 +124,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && window.location.pathname === '/sign-in') {
     console.log('User signed in:', session?.user?.email);
     // Use the current origin for the redirect
-    const redirectUrl = `${window.location.origin}/my-assistant`;
+    const redirectUrl = `${window.location.origin}/create-assistant`;
     console.log('Redirecting to:', redirectUrl);
     window.location.href = redirectUrl;
   } else if (event === 'SIGNED_OUT') {

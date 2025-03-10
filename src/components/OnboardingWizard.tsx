@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, Bot, Volume2, Phone, Users, MessageSquare, FileText, CheckCircle, Loader2, Info } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Bot, Volume2, Phone, Users, MessageSquare, FileText, CheckCircle, Loader2, Info, PartyPopper } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createAssistant } from '../lib/assistant';
 import CryptoJS from 'crypto-js';
 import AIAssistant from './AIAssistant';
+import Confetti from 'react-confetti';
 
 // Use the creation API key
 const CREATION_API_KEY = 'b23dd722-a84d-4bb5-8f8d-463625277d41';
@@ -28,6 +29,8 @@ interface FormData {
 const OnboardingWizard = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
     phoneNumber: '',
@@ -44,7 +47,7 @@ const OnboardingWizard = () => {
 
   // Update greeting phrase when company name changes
   useEffect(() => {
-    if (formData.companyName && !formData.greetingPhrase) {
+    if (formData.companyName) {
       setFormData(prev => ({
         ...prev,
         greetingPhrase: `It's a great day at ${formData.companyName}! How can I help you?`
@@ -58,6 +61,15 @@ const OnboardingWizard = () => {
       ...prev,
       [name]: value
     }));
+
+    // If changing company name, update greeting phrase
+    if (name === 'companyName') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        greetingPhrase: `It's a great day at ${value}! How can I help you?`
+      }));
+    }
   };
 
   const handleVoiceSelect = (voiceId: string) => {
@@ -202,6 +214,11 @@ Additional details: ${formData.additionalDetails}`;
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePublish = () => {
+    setShowPublishModal(true);
+    setIsPublished(true);
   };
 
   const renderStepContent = () => {
@@ -396,9 +413,10 @@ Additional details: ${formData.additionalDetails}`;
                   value={formData.greetingPhrase}
                   onChange={handleInputChange}
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300"
-                  placeholder={`Example: It's a great day at ${formData.companyName || 'your business'}! How can I help you?`}
+                  placeholder="It's a great day at your company! How can I help you?"
+                  disabled
                 />
-                <p className="mt-2 text-xs text-gray-400">This is what your AI receptionist will say when answering calls.</p>
+                <p className="mt-2 text-xs text-gray-400">This greeting will be used by your AI receptionist when answering calls.</p>
               </div>
             </div>
           </div>
@@ -452,7 +470,7 @@ Additional details: ${formData.additionalDetails}`;
               <AIAssistant assistantId={createdAssistantId || undefined} />
             </div>
             
-            <div className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50">
+            <div className="bg-gray-900/50 rounded-lg border border-gray-700/50 p-6">
               <h3 className="font-medium text-white mb-2">Assistant Configuration</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex">
@@ -469,6 +487,24 @@ Additional details: ${formData.additionalDetails}`;
                 </div>
               </div>
             </div>
+
+            <div className="flex items-center justify-center space-x-4">
+              <button 
+                onClick={() => navigate('/my-assistant/manage')}
+                className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-2.5 rounded-lg flex items-center font-medium hover:from-green-600 hover:to-teal-600 transition-colors"
+              >
+                <span>Go to Dashboard</span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
+
+              <button 
+                onClick={handlePublish}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-2.5 rounded-lg flex items-center font-medium hover:from-purple-600 hover:to-blue-600 transition-colors"
+              >
+                <span>PUBLISH</span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
+            </div>
           </div>
         );
       
@@ -479,6 +515,34 @@ Additional details: ${formData.additionalDetails}`;
 
   return (
     <div className="bg-gray-800/60 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-md overflow-hidden">
+      {showPublishModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          {isPublished && <Confetti numberOfPieces={200} recycle={false} />}
+          <div className="relative w-full max-w-md bg-gray-900 rounded-2xl shadow-2xl p-6 text-center">
+            <div className="mb-4">
+              <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
+                <PartyPopper className="h-8 w-8 text-purple-400" />
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+              Congratulations!
+            </h3>
+            <p className="text-gray-300 mb-4">
+              You have successfully published your assistant!
+            </p>
+            <p className="text-gray-400 mb-6">
+              We will contact you shortly to assign your assistant to your number.
+            </p>
+            <button
+              onClick={() => setShowPublishModal(false)}
+              className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-blue-600 transition-colors w-full"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Progress Bar */}
       <div className="border-b border-gray-700/50 p-6">
         <div className="flex items-center justify-between mb-2">
