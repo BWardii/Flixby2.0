@@ -22,6 +22,7 @@ function MyAIAssistant() {
     { to: 'create', icon: <FileText className="w-5 h-5" />, label: 'Guided Setup' },
     { to: 'calls', icon: <Phone className="w-5 h-5" />, label: 'Calls' },
     { to: 'manage', icon: <Settings className="w-5 h-5" />, label: 'Manage Agent' },
+    { to: 'subscription', icon: <Wallet className="w-5 h-5" />, label: 'Subscription' },
   ];
 
   return (

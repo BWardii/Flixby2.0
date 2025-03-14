@@ -41,7 +41,7 @@ function SignUp() {
       if (error) throw error;
 
       if (data.user) {
-        navigate('/my-assistant');
+        navigate('/select-plan');
       }
     } catch (error) {
       console.error('Error signing up:', error);

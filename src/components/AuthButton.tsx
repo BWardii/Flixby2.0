@@ -3,6 +3,7 @@ import { LogIn, LogOut, Loader2, User as UserIcon, AlertCircle } from 'lucide-re
 import { signInWithGoogle, signOut, getCurrentUser, initializeAuth } from '../lib/auth';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function AuthButton() {
   const navigate = useNavigate();
@@ -14,9 +15,14 @@ export default function AuthButton() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Initialize auth and get initial user state
-        const initialUser = await initializeAuth();
-        setUser(initialUser);
+        // Get the current session directly from supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+        
+        setUser(session?.user || null);
         setError(null);
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -27,6 +33,16 @@ export default function AuthButton() {
     };
 
     initialize();
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('Auth state changed:', _event, session?.user?.email);
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSignIn = () => {
@@ -51,17 +67,17 @@ export default function AuthButton() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center w-10 h-10">
-        <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+      <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10">
+        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-500/20 text-red-400">
-        <AlertCircle className="w-4 h-4" />
-        <span className="text-sm">{error}</span>
+      <div className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-red-500/20 text-red-400">
+        <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+        <span className="text-xs sm:text-sm">Error</span>
       </div>
     );
   }
@@ -70,10 +86,10 @@ export default function AuthButton() {
     return (
       <button
         onClick={handleSignIn}
-        className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all duration-300 border border-gray-700/50 hover:border-green-500/50"
+        className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all duration-300 border border-gray-700/50 hover:border-green-500/50"
       >
-        <LogIn className="w-4 h-4" />
-        <span>Sign In</span>
+        <LogIn className="w-3 h-3 sm:w-4 sm:h-4" />
+        <span className="text-xs sm:text-sm">Sign In</span>
       </button>
     );
   }
@@ -82,29 +98,39 @@ export default function AuthButton() {
     <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all duration-300 border border-gray-700/50 hover:border-green-500/50"
+        className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all duration-300 border border-gray-700/50 hover:border-green-500/50"
       >
         {user.user_metadata.avatar_url ? (
           <img
             src={user.user_metadata.avatar_url}
             alt={user.user_metadata.full_name || 'User'}
-            className="w-6 h-6 rounded-full"
+            className="w-4 h-4 sm:w-6 sm:h-6 rounded-full"
           />
         ) : (
-          <UserIcon className="w-4 h-4" />
+          <UserIcon className="w-3 h-3 sm:w-4 sm:h-4" />
         )}
-        <span className="max-w-[120px] truncate">
-          {user.user_metadata.full_name || user.email}
+        <span className="max-w-[80px] sm:max-w-[120px] truncate text-xs sm:text-sm">
+          {user.user_metadata.full_name || user.email?.split('@')[0] || 'User'}
         </span>
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-48 rounded-lg bg-gray-800/90 backdrop-blur-lg shadow-lg py-1 border border-gray-700/50">
+        <div className="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg bg-gray-800/90 backdrop-blur-lg shadow-lg py-1 border border-gray-700/50 z-50">
+          <button
+            onClick={() => {
+              navigate('/my-assistant');
+              setShowDropdown(false);
+            }}
+            className="flex items-center space-x-2 w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+          >
+            <UserIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>My Dashboard</span>
+          </button>
           <button
             onClick={handleSignOut}
-            className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+            className="flex items-center space-x-2 w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
             <span>Sign Out</span>
           </button>
         </div>

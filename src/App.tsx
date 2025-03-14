@@ -11,8 +11,10 @@ import MyAIAssistant from './pages/MyAIAssistant';
 import CreateAssistant from './pages/assistant/CreateAssistant';
 import ManageAssistant from './pages/assistant/ManageAssistant';
 import CallLogs from './pages/assistant/CallLogs';
+import Subscription from './pages/assistant/Subscription';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import PlanSelection from './pages/PlanSelection';
 
 function App() {
   return (
@@ -27,11 +29,13 @@ function App() {
           <Route path="/features" element={<Features />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/select-plan" element={<PlanSelection />} />
           <Route path="/my-assistant" element={<MyAIAssistant />}>
             <Route index element={<Navigate to="create" replace />} />
             <Route path="create" element={<CreateAssistant />} />
             <Route path="manage" element={<ManageAssistant />} />
             <Route path="calls" element={<CallLogs />} />
+            <Route path="subscription" element={<Subscription />} />
           </Route>
         </Routes>
         <Footer />

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Bot, AlertCircle, Pencil, Save, Trash2, Globe, Volume2, Sliders, Phone, Loader2, Info, CheckCircle, Edit, X } from 'lucide-react';
+import { Bot, AlertCircle, Pencil, Save, Trash2, Globe, Volume2, Sliders, Phone, Loader2, Info, CheckCircle, Edit, X, Clock, RefreshCw } from 'lucide-react';
 import { Assistant, getAssistant, deleteAssistant, updateAssistant } from '../../lib/assistant';
 import { useNavigate } from 'react-router-dom';
 import AIAssistant from '../../components/AIAssistant';
 import { supabase } from '../../lib/supabase';
+import { getAssistantUsageMinutes } from '../../lib/vapi';
 
 function ManageAssistant() {
   const [assistant, setAssistant] = useState<Assistant | null>(null);
@@ -13,6 +14,9 @@ function ManageAssistant() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [usageMinutes, setUsageMinutes] = useState<number | null>(null);
+  const [loadingUsage, setLoadingUsage] = useState(false);
+  const [usageError, setUsageError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     first_message: '',
@@ -28,7 +32,7 @@ function ManageAssistant() {
     loadAssistant();
   }, []);
 
-  // When assistant data is loaded, update the form data
+  // When assistant data is loaded, update the form data and fetch usage
   useEffect(() => {
     if (assistant) {
       setFormData({
@@ -39,9 +43,36 @@ function ManageAssistant() {
         voice_id: assistant.voice_id,
         temperature: assistant.temperature
       });
+      
+      // Fetch usage data if there's an assistant_id
+      if (assistant.assistant_id) {
+        fetchAssistantUsage(assistant.assistant_id);
+      }
     }
   }, [assistant]);
 
+  const fetchAssistantUsage = async (assistantId: string) => {
+    try {
+      setLoadingUsage(true);
+      setUsageError(null);
+      
+      console.log(`Fetching usage for assistant ID: ${assistantId}`);
+      
+      // Get the raw value directly
+      const duration = await getAssistantUsageMinutes(assistantId);
+      console.log(`Raw duration value from API: ${duration}`);
+      
+      // Set state with exactly the raw value
+      setUsageMinutes(duration);
+      
+    } catch (err) {
+      console.error('Error fetching assistant usage:', err);
+      setUsageError('Failed to load usage data');
+    } finally {
+      setLoadingUsage(false);
+    }
+  };
+  
   const loadAssistant = async () => {
     try {
       setLoading(true);
@@ -235,7 +266,28 @@ function ManageAssistant() {
               <div className="w-10 h-10 bg-purple-900/50 rounded-lg flex items-center justify-center mr-3">
                 <Bot className="h-5 w-5 text-purple-400" />
               </div>
-              <h2 className="text-lg font-medium text-white">Your AI Assistant</h2>
+              <div>
+                <h2 className="text-lg font-medium text-white">Your AI Assistant</h2>
+                {assistant.assistant_id && (
+                  <div className="flex items-center mt-1">
+                    <span className="text-xs font-mono bg-gray-700/50 text-gray-300 px-2 py-0.5 rounded">
+                      ID: {assistant.assistant_id}
+                    </span>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(assistant.assistant_id || '');
+                        // You could add a toast notification here
+                      }}
+                      className="ml-2 text-purple-400 hover:text-purple-300 text-xs flex items-center"
+                      title="Copy assistant ID"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto">
               <button
@@ -450,6 +502,89 @@ function ManageAssistant() {
                       )}
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Usage Analytics */}
+        <div className="bg-gray-800/60 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-md overflow-hidden">
+          <div className="border-b border-gray-700/50 p-4 sm:p-6">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-blue-900/50 rounded-lg flex items-center justify-center mr-3">
+                <Clock className="h-5 w-5 text-blue-400" />
+              </div>
+              <h2 className="text-lg font-medium text-white">Usage Analytics</h2>
+            </div>
+          </div>
+          
+          <div className="p-4 sm:p-6">
+            <div className="mb-4">
+              <p className="text-gray-400 text-sm mb-2">Total minutes used (past 30 days)</p>
+              {loadingUsage ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
+                  <span className="text-gray-300">Loading usage data...</span>
+                </div>
+              ) : usageError ? (
+                <div className="text-red-400 flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5" />
+                  <span>{usageError}</span>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-3xl font-bold text-white">
+                    {usageMinutes !== null ? usageMinutes.toFixed(1) : '-'}
+                  </div>
+                  <div className="text-gray-400 mt-1">minutes used</div>
+                  
+                  <div className="mt-4">
+                    <button 
+                      onClick={() => {
+                        console.log('Refresh clicked - current assistant ID:', assistant?.assistant_id);
+                        if (assistant?.assistant_id) {
+                          fetchAssistantUsage(assistant.assistant_id);
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-600/80 hover:bg-blue-600 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                      disabled={loadingUsage}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${loadingUsage ? 'animate-spin' : ''}`} />
+                      <span>Refresh Usage Data</span>
+                    </button>
+                  </div>
+                  
+                  {/* Display assistant ID for reference */}
+                  {assistant?.assistant_id && (
+                    <div className="mt-4 p-3 bg-gray-800 rounded-lg">
+                      <p className="text-gray-400 text-sm mb-1">Assistant ID:</p>
+                      <div className="flex items-center">
+                        <pre className="text-xs text-gray-300 break-all">{assistant.assistant_id}</pre>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(assistant.assistant_id || '');
+                          }}
+                          className="ml-2 text-blue-400 hover:text-blue-300 p-1 rounded transition-colors"
+                          title="Copy assistant ID"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-gray-700/30 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-gray-300">
+                  <p className="mb-1">This metric shows the total call minutes used by this AI assistant across all channels (web and phone calls) over the past 30 days.</p>
+                  <p>Usage is updated in real-time as calls are completed.</p>
                 </div>
               </div>
             </div>

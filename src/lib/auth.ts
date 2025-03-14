@@ -4,7 +4,7 @@ import { User } from '@supabase/supabase-js';
 export async function signInWithGoogle() {
   try {
     const origin = window.location.origin;
-    const redirectUrl = `${origin}/create-assistant`;
+    const redirectUrl = `${origin}/select-plan`;
 
     console.log('Starting Google sign in...');
     console.log('Redirect URL:', redirectUrl);
@@ -120,16 +120,24 @@ export async function initializeAuth() {
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Auth state changed:', event, session);
   
-  // Only redirect on explicit sign in events
+  // Only redirect on explicit sign in events from the sign-in page
   if (event === 'SIGNED_IN' && window.location.pathname === '/sign-in') {
-    console.log('User signed in:', session?.user?.email);
+    console.log('User signed in from sign-in page:', session?.user?.email);
     // Use the current origin for the redirect
-    const redirectUrl = `${window.location.origin}/create-assistant`;
+    const redirectUrl = `${window.location.origin}/select-plan`;
     console.log('Redirecting to:', redirectUrl);
     window.location.href = redirectUrl;
   } else if (event === 'SIGNED_OUT') {
     console.log('User signed out');
     localStorage.removeItem('supabase.auth.token');
     sessionStorage.removeItem('supabase.auth.token');
+    
+    // If on a protected route, redirect to home
+    const protectedRoutes = ['/my-assistant', '/select-plan'];
+    const currentPath = window.location.pathname;
+    
+    if (protectedRoutes.some(route => currentPath.startsWith(route))) {
+      window.location.href = window.location.origin;
+    }
   }
 });
