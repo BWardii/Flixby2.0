@@ -165,7 +165,7 @@ export async function initializeAuth() {
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Auth state changed:', event, session);
   
-  // Only redirect on explicit sign in events from the sign-in page
+  // Emit custom event instead of directly using window.location
   if (event === 'SIGNED_IN' && window.location.pathname === '/sign-in') {
     console.log('User signed in from sign-in page:', session?.user?.email);
     
@@ -173,24 +173,31 @@ supabase.auth.onAuthStateChange((event, session) => {
     const isNewUser = session?.user?.app_metadata?.provider === 'google' && 
                       new Date(session.user.created_at).getTime() > (Date.now() - 5 * 60 * 1000);
     
-    // Determine redirect URL based on user status
-    const redirectUrl = isNewUser 
-      ? `${window.location.origin}/select-plan`
-      : `${window.location.origin}/my-assistant/create`;
+    // Dispatch a custom event for our AuthProvider to handle
+    const redirectPath = isNewUser ? '/select-plan' : '/my-assistant/create';
+    console.log(`Auth event: should redirect to ${redirectPath}`);
     
-    console.log(`Redirecting ${isNewUser ? 'new' : 'returning'} user to:`, redirectUrl);
-    window.location.href = redirectUrl;
+    // Dispatch a custom event that our React components can listen for
+    window.dispatchEvent(
+      new CustomEvent('flixby:auth:redirect', {
+        detail: { path: redirectPath, reason: 'sign_in' }
+      })
+    );
   } else if (event === 'SIGNED_OUT') {
     console.log('User signed out');
     localStorage.removeItem('supabase.auth.token');
     sessionStorage.removeItem('supabase.auth.token');
     
-    // If on a protected route, redirect to home
+    // If on a protected route, redirect to home using custom event
     const protectedRoutes = ['/my-assistant', '/select-plan'];
     const currentPath = window.location.pathname;
     
     if (protectedRoutes.some(route => currentPath.startsWith(route))) {
-      window.location.href = window.location.origin;
+      window.dispatchEvent(
+        new CustomEvent('flixby:auth:redirect', {
+          detail: { path: '/', reason: 'sign_out' }
+        })
+      );
     }
   }
 });

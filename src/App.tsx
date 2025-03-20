@@ -21,37 +21,40 @@ import SignUp from './pages/SignUp';
 import ResetPassword from './pages/ResetPassword';
 import PlanSelection from './pages/PlanSelection';
 import Contact from './pages/Contact';
+import AuthProvider from './components/AuthProvider';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-900 text-white">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/use-cases" element={<UseCases />} />
-          <Route path="/use-cases/restaurants" element={<RestaurantsUseCases />} />
-          <Route path="/use-cases/hotels-resorts" element={<HotelsResortsUseCases />} />
-          <Route path="/use-cases/beauty-wellness" element={<BeautyWellnessUseCases />} />
-          <Route path="/use-cases/healthcare" element={<HealthcareUseCases />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/sign-in" element={<SignIn />} />
-          <Route path="/sign-up" element={<SignUp />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/select-plan" element={<PlanSelection />} />
-          <Route path="/my-assistant" element={<MyAIAssistant />}>
-            <Route index element={<Navigate to="create" replace />} />
-            <Route path="create" element={<CreateAssistant />} />
-            <Route path="manage" element={<ManageAssistant />} />
-            <Route path="calls" element={<CallLogs />} />
-            <Route path="subscription" element={<Subscription />} />
-          </Route>
-        </Routes>
-        <Footer />
-      </div>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-900 text-white">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/use-cases" element={<UseCases />} />
+            <Route path="/use-cases/restaurants" element={<RestaurantsUseCases />} />
+            <Route path="/use-cases/hotels-resorts" element={<HotelsResortsUseCases />} />
+            <Route path="/use-cases/beauty-wellness" element={<BeautyWellnessUseCases />} />
+            <Route path="/use-cases/healthcare" element={<HealthcareUseCases />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/sign-in" element={<SignIn />} />
+            <Route path="/sign-up" element={<SignUp />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/select-plan" element={<PlanSelection />} />
+            <Route path="/my-assistant" element={<MyAIAssistant />}>
+              <Route index element={<Navigate to="create" replace />} />
+              <Route path="create" element={<CreateAssistant />} />
+              <Route path="manage" element={<ManageAssistant />} />
+              <Route path="calls" element={<CallLogs />} />
+              <Route path="subscription" element={<Subscription />} />
+            </Route>
+          </Routes>
+          <Footer />
+        </div>
+      </AuthProvider>
     </Router>
   );
 }
