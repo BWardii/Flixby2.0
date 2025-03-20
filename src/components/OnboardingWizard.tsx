@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, Bot, Volume2, Phone, Users, MessageSquare, FileText, CheckCircle, Loader2, Info, PartyPopper } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Bot, Volume2, Phone, Users, MessageSquare, FileText, CheckCircle, Loader2, Info, PartyPopper, UtensilsCrossed, Building, Stethoscope, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createAssistant } from '../lib/assistant';
 import CryptoJS from 'crypto-js';
@@ -44,6 +44,72 @@ const OnboardingWizard = () => {
   const [error, setError] = useState<string | null>(null);
   const [createdAssistantId, setCreatedAssistantId] = useState<string | null>(null);
   const totalSteps = 5; // Now includes a test step
+
+  // Industry templates for step 4
+  const industryTemplates = {
+    restaurant: `Business Hours: {{Monday-Friday: 11:00 AM - 10:00 PM, Saturday-Sunday: 10:00 AM - 11:00 PM}}
+Types of Cuisine: {{We specialize in [TYPE OF CUISINE] with [SIGNATURE COOKING STYLES]}}
+Popular Dishes: {{Our signature dishes include [DISH 1], [DISH 2], and [DISH 3]}}
+Reservations: We accept reservations up to {{X WEEKS/DAYS}} in advance for parties of any size.
+Special Accommodations: We offer {{vegetarian, vegan, gluten-free}} options. We can accommodate food allergies with advance notice.
+Delivery: We offer delivery through {{DELIVERY SERVICES}} within a {{X-MILE}} radius.
+Catering: We provide catering services for events with at least {{X HOURS/DAYS}} notice.
+Happy Hour: {{DAYS}} from {{TIME RANGE}} with {{SPECIAL OFFERS}}.`,
+
+    healthcare: `Services Offered: {{Primary care, specialty services, preventive care, etc.}}
+Office Hours: {{Monday-Friday: 9:00 AM - 5:00 PM, extended hours on [DAYS] until [TIME]}}
+Insurance: We accept {{INSURANCE PLANS}} including {{MAJOR PROVIDERS LIST}}.
+New Patients: {{Currently accepting/Not accepting}} new patients. First appointments typically last {{X MINUTES}}.
+Appointments: Routine check-ups should be scheduled at least {{X DAYS/WEEKS}} in advance. Same-day appointments are available for urgent matters.
+Prescription Refills: Please allow {{X HOURS}} for prescription refill requests.
+Telehealth: {{Available/Not available}} for {{TYPES OF APPOINTMENTS}}.
+Special Services: {{Additional services offered by your practice}}.`,
+
+    hotel: `Accommodations: We offer {{ROOM TYPES}} with {{BED CONFIGURATIONS}}.
+Check-in/Check-out: Check-in time is {{TIME}} and check-out time is {{TIME}}.
+Amenities: Our hotel features {{LIST KEY AMENITIES: pool, fitness center, etc.}}
+Dining: Our on-site restaurant serves {{MEAL TYPES}} from {{TIME RANGES}}.
+Reservations: We recommend booking at least {{X DAYS/WEEKS}} in advance during {{PEAK SEASON MONTHS}}.
+Cancellation Policy: Cancellations must be made {{X HOURS}} before check-in to avoid a {{FEE DETAILS}}.
+Parking: {{PARKING OPTIONS}} available for {{PRICE}} per night.
+Pet Policy: {{Pet-friendly/No pets}} with a {{FEE DETAILS}} per stay.`,
+
+    beauty: `Services Offered: {{LIST SERVICES: haircuts, coloring, facials, etc.}}
+Hours: {{DAYS: 9:00 AM - 7:00 PM, WEEKENDS: 10:00 AM - 5:00 PM, CLOSED: [DAYS]}}
+Appointments: We recommend booking {{X DAYS/WEEKS}} in advance, especially for {{PEAK TIMES}}.
+Products: We use and sell {{PRODUCT BRANDS}}.
+Cancellation Policy: Please provide {{X HOURS}} notice for cancellations to avoid a {{FEE DETAILS}}.
+Gift Cards: We offer {{TYPES OF GIFT CARDS}} in {{DENOMINATIONS}}.
+Special Services: {{SPECIAL OFFERINGS like bridal packages, group services, etc.}}
+Membership/Loyalty: {{DETAILS OF ANY MEMBERSHIP OR LOYALTY PROGRAMS}}.`
+  };
+
+  // State to show template selection feedback
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+
+  // Function to format template text with blue placeholders
+  const formatTemplateText = (text: string) => {
+    if (!text) return '';
+    // Replace {{placeholder}} with styled spans
+    return text.replace(/\{\{([^}]+)\}\}/g, (match, content) => {
+      return content;
+    });
+  };
+
+  // Function to apply a template
+  const applyTemplate = (templateKey: keyof typeof industryTemplates) => {
+    // Store raw template with {{placeholder}} syntax
+    setFormData(prev => ({
+      ...prev,
+      additionalDetails: industryTemplates[templateKey]
+    }));
+    
+    // Show feedback that template was applied
+    setSelectedTemplate(templateKey);
+    setTimeout(() => {
+      setSelectedTemplate(null);
+    }, 3000);
+  };
 
   // Update greeting phrase when company name changes
   useEffect(() => {
@@ -428,18 +494,88 @@ Additional details: ${formData.additionalDetails}`;
             <h2 className="text-2xl font-semibold text-white">Any Additional Details?</h2>
             <p className="text-gray-400">The more details you provide, the more accurately your AI can answer callers.</p>
             
-            <div>
+            <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Additional Information
+                Choose a Template (Optional)
               </label>
+              {selectedTemplate && (
+                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center text-green-400 text-sm">
+                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span>
+                    <strong className="capitalize">{selectedTemplate}</strong> template applied! You can now customize the details below.
+                  </span>
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => applyTemplate('restaurant')}
+                  className="flex items-center px-4 py-3 bg-gray-800/70 hover:bg-gray-700/70 rounded-lg border border-gray-700/50 text-left transition-all duration-300"
+                >
+                  <UtensilsCrossed className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0" />
+                  <span className="font-medium text-white flex-grow">Restaurant Template</span>
+                  <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyTemplate('healthcare')}
+                  className="flex items-center px-4 py-3 bg-gray-800/70 hover:bg-gray-700/70 rounded-lg border border-gray-700/50 text-left transition-all duration-300"
+                >
+                  <Stethoscope className="h-5 w-5 text-blue-400 mr-3 flex-shrink-0" />
+                  <span className="font-medium text-white flex-grow">Healthcare Template</span>
+                  <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyTemplate('hotel')}
+                  className="flex items-center px-4 py-3 bg-gray-800/70 hover:bg-gray-700/70 rounded-lg border border-gray-700/50 text-left transition-all duration-300"
+                >
+                  <Building className="h-5 w-5 text-green-400 mr-3 flex-shrink-0" />
+                  <span className="font-medium text-white flex-grow">Hotel & Resort Template</span>
+                  <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyTemplate('beauty')}
+                  className="flex items-center px-4 py-3 bg-gray-800/70 hover:bg-gray-700/70 rounded-lg border border-gray-700/50 text-left transition-all duration-300"
+                >
+                  <Sparkles className="h-5 w-5 text-purple-400 mr-3 flex-shrink-0" />
+                  <span className="font-medium text-white flex-grow">Beauty & Wellness Template</span>
+                  <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-gray-400">Select a template to pre-fill with industry-specific information that you can customize.</p>
+            </div>
+
+            <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-5">
+              <div className="flex items-center mb-3">
+                <label className="flex items-center text-sm font-medium text-gray-300">
+                  <Info className="h-4 w-4 text-gray-400 mr-2" />
+                  <span>Additional Information <span className="font-bold">(Edit placeholder text below)</span></span>
+                </label>
+              </div>
               <textarea
                 name="additionalDetails"
                 value={formData.additionalDetails}
                 onChange={handleInputChange}
-                rows={8}
+                rows={12}
                 className="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300"
-                placeholder="Enter details about your services, pricing, business hours, geographical service area, or anything else callers should know."
+                placeholder="Fill in all placeholder text with your specific business information"
               />
+              
+              <div className="mt-3 bg-gray-800/50 border border-gray-700/50 rounded p-3 text-xs flex items-start">
+                <div className="bg-gray-700/70 rounded-full p-1 mr-2 mt-0.5 flex-shrink-0">
+                  <Info className="h-3 w-3 text-gray-300" />
+                </div>
+                <div>
+                  <p className="text-gray-300 mb-1">
+                    <span className="font-bold">Important:</span> Replace all placeholder text that appears in double curly braces.
+                  </p>
+                  <p className="text-gray-400">
+                    For example, replace text like <span className="font-bold">&#123;&#123;ROOM TYPES&#125;&#125;</span> and <span className="font-bold">&#123;&#123;BED CONFIGURATIONS&#125;&#125;</span> with your actual business information.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         );

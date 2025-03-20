@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle, Loader2, Bot, ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { signInWithGoogle } from '../lib/auth';
+import { signInWithGoogle, resetPassword } from '../lib/auth';
 
 function SignIn() {
   const navigate = useNavigate();
@@ -11,6 +11,8 @@ function SignIn() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<ReactNode | null>(null);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,14 +20,23 @@ function SignIn() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-
-      navigate('/create-assistant');
+      
+      // Check if user is returning (not a new user)
+      const user = data.user;
+      const isNewUser = user && new Date(user.created_at).getTime() > (Date.now() - 5 * 60 * 1000);
+      
+      // Redirect based on user status
+      if (isNewUser) {
+        navigate('/select-plan');
+      } else {
+        navigate('/my-assistant/create');
+      }
     } catch (error) {
       console.error('Error signing in:', error);
       setError(error instanceof Error ? error.message : 'Failed to sign in');
@@ -45,6 +56,42 @@ function SignIn() {
       setError(error instanceof Error ? error.message : 'Failed to sign in with Google');
       setGoogleLoading(false);
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    if (!email) {
+      setError('Please enter your email address');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { success, error } = await resetPassword(email);
+      
+      if (!success) {
+        // No longer need a development workaround since Supabase is configured
+        throw new Error(error || 'Failed to send password reset email');
+      } else {
+        setSuccessMessage('Password reset link sent to your email address. Please check your inbox (and spam folder).');
+      }
+      // Keep forgotPasswordMode true so the user can see the success message
+    } catch (error) {
+      console.error('Error in forgot password:', error);
+      setError(error instanceof Error ? error.message : 'Failed to send password reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleForgotPasswordMode = () => {
+    setForgotPasswordMode(!forgotPasswordMode);
+    setError(null);
+    setSuccessMessage(null);
   };
 
   const benefits = [
@@ -77,133 +124,208 @@ function SignIn() {
                 <div className="inline-block">
                   <div className="flex items-center justify-center lg:justify-start space-x-2 bg-gray-800/50 backdrop-blur-lg rounded-full px-4 py-2 mb-4 sm:mb-6 border border-gray-700/50">
                     <LogIn className="h-5 w-5 text-purple-400" />
-                    <span className="text-sm text-gray-300">Welcome Back</span>
+                    <span className="text-sm text-gray-300">{forgotPasswordMode ? 'Reset Password' : 'Welcome Back'}</span>
                   </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
                   <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
-                    Sign In to Your Account
+                    {forgotPasswordMode ? 'Reset Your Password' : 'Sign In to Your Account'}
                   </span>
                 </h1>
                 <p className="text-gray-400 text-base sm:text-lg">
-                  Access your AI assistant and manage your settings
+                  {forgotPasswordMode
+                    ? 'Enter your email and we\'ll send you a link to reset your password'
+                    : 'Access your AI assistant and manage your settings'}
                 </p>
               </div>
 
               <div className="bg-gray-800/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl p-6 sm:p-8">
-                <form onSubmit={handleEmailSignIn} className="space-y-4 sm:space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                        <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                      </div>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
-                        placeholder="Enter your email"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1 sm:mb-2">
-                      <label className="block text-sm font-medium text-gray-300">
-                        Password
+                {forgotPasswordMode ? (
+                  <form onSubmit={handleForgotPassword} className="space-y-4 sm:space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+                        Email Address
                       </label>
-                      <button type="button" className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 transition-colors">
-                        Forgot password?
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                          <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          className="block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
+                          placeholder="Enter your email"
+                        />
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 text-red-400 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                        <p className="text-xs sm:text-sm">{error}</p>
+                      </div>
+                    )}
+
+                    {successMessage && (
+                      <div className="bg-green-500/20 border border-green-500/50 rounded-xl px-4 py-3 text-green-400 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                        <div className="text-xs sm:text-sm">
+                          {typeof successMessage === 'string' ? successMessage : successMessage}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white px-6 py-3.5 rounded-xl font-medium hover:shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>Sending...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Send Reset Link</span>
+                            <ArrowRight className="h-5 w-5 ml-1" />
+                          </>
+                        )}
                       </button>
                     </div>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                        <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+
+                    <div className="text-center mt-4">
+                      <button
+                        type="button"
+                        onClick={toggleForgotPasswordMode}
+                        className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                      >
+                        Back to sign in
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={handleEmailSignIn} className="space-y-4 sm:space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                          <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          className="block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
+                          placeholder="Enter your email"
+                        />
                       </div>
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
-                        placeholder="Enter your password"
-                      />
                     </div>
-                  </div>
 
-                  {error && (
-                    <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 text-red-400 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                      <p className="text-xs sm:text-sm">{error}</p>
+                    <div>
+                      <div className="flex items-center justify-between mb-1 sm:mb-2">
+                        <label className="block text-sm font-medium text-gray-300">
+                          Password
+                        </label>
+                        <button
+                          type="button"
+                          onClick={toggleForgotPasswordMode}
+                          className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                          <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          className="block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
+                          placeholder="Enter your password"
+                        />
+                      </div>
                     </div>
-                  )}
 
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white px-6 py-3.5 rounded-xl font-medium hover:shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          <span>Signing in...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Sign In</span>
-                          <ArrowRight className="h-5 w-5 ml-1" />
-                        </>
-                      )}
-                    </button>
-                  </div>
+                    {error && (
+                      <div className="bg-red-500/20 border border-red-500/50 rounded-xl px-4 py-3 text-red-400 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                        <p className="text-xs sm:text-sm">{error}</p>
+                      </div>
+                    )}
 
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-700/50"></div>
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white px-6 py-3.5 rounded-xl font-medium hover:shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>Signing in...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Sign In</span>
+                            <ArrowRight className="h-5 w-5 ml-1" />
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-gray-800/80 text-gray-400">Or continue with</span>
-                    </div>
-                  </div>
 
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handleGoogleSignIn}
-                      disabled={googleLoading}
-                      className="w-full bg-gray-800/80 text-white px-6 py-3.5 rounded-xl font-medium border border-gray-700 hover:border-gray-600 hover:bg-gray-700/50 transition-all duration-300 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {googleLoading ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          <span>Connecting to Google...</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                          </svg>
-                          <span>Sign in with Google</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="text-center mt-4">
-                    <div className="flex items-center justify-center space-x-3 text-xs sm:text-sm text-gray-400">
-                      <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
-                      <span>Secure authentication</span>
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-700/50"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-gray-800/80 text-gray-400">Or continue with</span>
+                      </div>
                     </div>
-                  </div>
-                </form>
+
+                    <div>
+                      <button
+                        type="button"
+                        onClick={handleGoogleSignIn}
+                        disabled={googleLoading}
+                        className="w-full bg-gray-800/80 text-white px-6 py-3.5 rounded-xl font-medium border border-gray-700 hover:border-gray-600 hover:bg-gray-700/50 transition-all duration-300 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {googleLoading ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>Connecting to Google...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            <span>Sign in with Google</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="text-center mt-4">
+                      <div className="flex items-center justify-center space-x-3 text-xs sm:text-sm text-gray-400">
+                        <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
+                        <span>Secure authentication</span>
+                      </div>
+                    </div>
+                  </form>
+                )}
 
                 <div className="mt-6 sm:mt-8 text-center border-t border-gray-700/50 pt-4 sm:pt-6">
                   <p className="text-xs sm:text-sm text-gray-400">

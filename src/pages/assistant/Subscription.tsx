@@ -30,13 +30,19 @@ function Subscription() {
         if (assistantData?.assistant_id) {
           try {
             const usedMinutes = await getAssistantUsageMinutes(assistantData.assistant_id);
+            console.log(`Fetched usage minutes for ${assistantData.assistant_id}: ${usedMinutes}`);
             setTotalMinutesUsed(usedMinutes);
             
             // Calculate minutes left
+            console.log(`Calculating minutes left for plan: ${currentPlan}`);
             const minutes = await calculateMinutesLeft('starter', assistantData.assistant_id, usedMinutes);
+            console.log(`Minutes left calculation result: ${minutes}`);
             setMinutesLeft(minutes);
           } catch (error) {
             console.error('Error fetching usage data:', error);
+            // Default to 0 on error
+            setTotalMinutesUsed(0);
+            setMinutesLeft(0);
           }
         }
       } catch (error) {
@@ -180,8 +186,10 @@ function Subscription() {
                       <div>
                         <div className="text-gray-400 text-sm">Minutes Left</div>
                         <div className="text-xl font-semibold text-white">
-                          {minutesLeft === null ? (
-                            <span className="text-gray-500">Calculating...</span>
+                          {loading ? (
+                            <span className="text-gray-500">Loading...</span>
+                          ) : minutesLeft === null ? (
+                            <span className="text-gray-500">0</span>
                           ) : minutesLeft === -1 ? (
                             "Unlimited"
                           ) : (

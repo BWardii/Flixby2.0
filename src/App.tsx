@@ -5,6 +5,10 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
 import UseCases from './pages/UseCases';
+import RestaurantsUseCases from './pages/use-cases/Restaurants';
+import HotelsResortsUseCases from './pages/use-cases/HotelsResorts';
+import BeautyWellnessUseCases from './pages/use-cases/BeautyWellness';
+import HealthcareUseCases from './pages/use-cases/Healthcare';
 import Pricing from './pages/Pricing';
 import Features from './pages/Features';
 import MyAIAssistant from './pages/MyAIAssistant';
@@ -14,7 +18,9 @@ import CallLogs from './pages/assistant/CallLogs';
 import Subscription from './pages/assistant/Subscription';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import ResetPassword from './pages/ResetPassword';
 import PlanSelection from './pages/PlanSelection';
+import Contact from './pages/Contact';
 
 function App() {
   return (
@@ -25,10 +31,16 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/use-cases" element={<UseCases />} />
+          <Route path="/use-cases/restaurants" element={<RestaurantsUseCases />} />
+          <Route path="/use-cases/hotels-resorts" element={<HotelsResortsUseCases />} />
+          <Route path="/use-cases/beauty-wellness" element={<BeautyWellnessUseCases />} />
+          <Route path="/use-cases/healthcare" element={<HealthcareUseCases />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/features" element={<Features />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/select-plan" element={<PlanSelection />} />
           <Route path="/my-assistant" element={<MyAIAssistant />}>
             <Route index element={<Navigate to="create" replace />} />

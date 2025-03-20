@@ -184,15 +184,25 @@ function CallLogs() {
 
   // Calculate minutes left based on usage and plan
   const updateMinutesLeft = async (usedMinutes: number) => {
-    if (!assistant?.assistant_id) return;
+    if (!assistant?.assistant_id) {
+      console.log('Cannot calculate minutes left: No assistant ID');
+      return;
+    }
     
     try {
+      console.log(`Calculating minutes left for assistant ${assistant.assistant_id} with ${usedMinutes} minutes used`);
+      
       // For demo purposes, we're using hardcoded "starter" plan
       // In a real app, you'd fetch the user's actual plan from the database
       const minutes = await calculateMinutesLeft(currentPlan, assistant.assistant_id, usedMinutes);
-      setMinutesLeft(minutes);
+      console.log(`Minutes left calculation result: ${minutes}`);
+      
+      // Set minutes left, defaulting to 0 if null
+      setMinutesLeft(minutes !== null ? minutes : 0);
     } catch (error) {
       console.error('Error calculating minutes left:', error);
+      // Default to 0 minutes left on error
+      setMinutesLeft(0);
     }
   };
 
@@ -200,9 +210,10 @@ function CallLogs() {
   useEffect(() => {
     if (assistant?.assistant_id) {
       const userMinutes = calculateTotalMinutes(filteredRecords);
+      console.log(`Updating minutes left with ${userMinutes} used minutes`);
       updateMinutesLeft(userMinutes);
     }
-  }, [totalMinutes, assistant, filteredRecords]);
+  }, [totalMinutes, assistant, filteredRecords, currentPlan]);
 
   // Toggle between all records and user-specific records
   const toggleRecordFilter = () => {
@@ -286,8 +297,10 @@ function CallLogs() {
                 <div>
                   <p className="text-gray-400 text-sm mb-1">Minutes Left</p>
                   <div className="text-3xl font-bold text-white">
-                    {minutesLeft === null ? (
-                      <span className="text-gray-500">Calculating...</span>
+                    {loading ? (
+                      <span className="text-gray-500">Loading...</span>
+                    ) : minutesLeft === null ? (
+                      <span className="text-gray-500">0</span>
                     ) : minutesLeft === -1 ? (
                       "Unlimited"
                     ) : (

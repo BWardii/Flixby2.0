@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Check, ChevronRight, Zap, DollarSign, PoundSterling, Shield } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 // Subscription plan types
 interface Plan {
@@ -27,6 +28,30 @@ function PlanSelection() {
   const [selectedPlan, setSelectedPlan] = useState<string>('starter');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [currency, setCurrency] = useState<'USD' | 'GBP'>('USD');
+  
+  // Check if user should be on this page (only for new users)
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // If not logged in, redirect to sign in page
+        navigate('/sign-in');
+        return;
+      }
+      
+      // Check if user is a returning user (created more than 5 minutes ago)
+      const user = session.user;
+      const isNewUser = new Date(user.created_at).getTime() > (Date.now() - 5 * 60 * 1000);
+      
+      if (!isNewUser) {
+        // Returning users should go directly to the create page
+        navigate('/my-assistant/create');
+      }
+    };
+    
+    checkUserStatus();
+  }, [navigate]);
   
   // Subscription plans
   const plans: Plan[] = [

@@ -207,7 +207,12 @@ function Home() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center lg:justify-start space-x-4">
+              {/* Updated CTA section with integrated free minutes messaging */}
+              <div className="flex flex-col space-y-5">
+                {/* Primary and secondary CTA buttons in a row */}
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Create Agent button with integrated free minutes badge */}
+                  <div className="relative">
                 <button 
                   onClick={() => navigate('/sign-up')}
                   className="group bg-gradient-to-r from-green-500 to-teal-500 text-white px-8 py-3 rounded-full font-medium hover:from-green-600 hover:to-teal-600 transition-all duration-300 flex items-center transform hover:scale-105"
@@ -215,6 +220,12 @@ function Home() {
                   Create an Agent in 30 seconds
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </button>
+                    
+                    {/* Badge above button */}
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full shadow-md whitespace-nowrap">
+                      START WITH 20 FREE MINUTES
+                    </div>
+                  </div>
                 
                 <button 
                   onClick={() => setShowDemoModal(true)}
@@ -223,6 +234,15 @@ function Home() {
                   Book a Demo
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </button>
+                </div>
+                
+                {/* No credit card required message */}
+                <div className="text-center sm:text-left">
+                  <span className="text-gray-400 text-sm flex items-center justify-center sm:justify-start">
+                    <CheckCircle className="h-4 w-4 text-green-400 mr-1" />
+                    No credit card required
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1059,7 +1079,7 @@ function Home() {
           }}></div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Header */}
           <div className="text-center mb-16">
             <div className="inline-block animate-float mb-6">

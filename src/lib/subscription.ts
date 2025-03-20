@@ -104,10 +104,13 @@ export function getPlanById(planId: string): Plan {
  * Returns -1 for unlimited plans
  */
 export async function calculateMinutesLeft(planId: string, assistantId: string, minutesUsed?: number): Promise<number> {
+  console.log(`calculateMinutesLeft called with planId=${planId}, assistantId=${assistantId}, minutesUsed=${minutesUsed}`);
+  
   const plan = getPlanById(planId);
   
   // If plan has unlimited minutes, return -1
   if (plan.callMinutes === -1) {
+    console.log(`Plan ${planId} has unlimited minutes`);
     return -1;
   }
   
@@ -115,15 +118,24 @@ export async function calculateMinutesLeft(planId: string, assistantId: string, 
   let usedMinutes = minutesUsed;
   if (usedMinutes === undefined && assistantId) {
     try {
+      console.log(`Fetching usage minutes for assistant ${assistantId}`);
       usedMinutes = await getAssistantUsageMinutes(assistantId);
+      console.log(`Fetched usage minutes: ${usedMinutes}`);
     } catch (error) {
       console.error('Error fetching minutes used:', error);
       usedMinutes = 0; // Default to 0 if there's an error
     }
   }
   
+  // Ensure usedMinutes is a valid number
+  if (usedMinutes === undefined || usedMinutes === null || isNaN(Number(usedMinutes))) {
+    console.log(`Invalid usedMinutes (${usedMinutes}), defaulting to 0`);
+    usedMinutes = 0;
+  }
+  
   // Calculate minutes left
   const minutesLeft = Math.max(0, plan.callMinutes - (usedMinutes || 0));
+  console.log(`Plan minutes: ${plan.callMinutes}, Used minutes: ${usedMinutes}, Minutes left: ${minutesLeft}`);
   return minutesLeft;
 }
 

@@ -40,6 +40,51 @@ export async function signInWithGoogle() {
   }
 }
 
+export async function resetPassword(email: string): Promise<{ success: boolean; error: string | null }> {
+  try {
+    // Get the current origin for the reset link
+    const origin = window.location.origin;
+    const redirectTo = `${origin}/reset-password`;
+
+    console.log('Sending password reset email to:', email);
+    console.log('Redirect URL for reset link:', redirectTo);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectTo,
+    });
+
+    if (error) {
+      console.error('Error sending password reset email:', error);
+      throw error;
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function updatePassword(newPassword: string): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      console.error('Error updating password:', error);
+      throw error;
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error in updatePassword:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return { success: false, error: errorMessage };
+  }
+}
+
 export async function signOut() {
   try {
     const { error } = await supabase.auth.signOut();
@@ -123,9 +168,17 @@ supabase.auth.onAuthStateChange((event, session) => {
   // Only redirect on explicit sign in events from the sign-in page
   if (event === 'SIGNED_IN' && window.location.pathname === '/sign-in') {
     console.log('User signed in from sign-in page:', session?.user?.email);
-    // Use the current origin for the redirect
-    const redirectUrl = `${window.location.origin}/select-plan`;
-    console.log('Redirecting to:', redirectUrl);
+    
+    // Check if this is a new user or returning user
+    const isNewUser = session?.user?.app_metadata?.provider === 'google' && 
+                      new Date(session.user.created_at).getTime() > (Date.now() - 5 * 60 * 1000);
+    
+    // Determine redirect URL based on user status
+    const redirectUrl = isNewUser 
+      ? `${window.location.origin}/select-plan`
+      : `${window.location.origin}/my-assistant/create`;
+    
+    console.log(`Redirecting ${isNewUser ? 'new' : 'returning'} user to:`, redirectUrl);
     window.location.href = redirectUrl;
   } else if (event === 'SIGNED_OUT') {
     console.log('User signed out');
