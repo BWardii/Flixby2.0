@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Bot, MessageSquare, Building2, Briefcase, ShoppingBag, Calendar, Utensils, Hotel, Plane, Car, Headphones, ArrowRight, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import SEO from '../components/SEO';
 
 function UseCases() {
   const [activeIndustry, setActiveIndustry] = useState<string>("Restaurants");
@@ -98,6 +99,12 @@ function UseCases() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Industry Use Cases" 
+        description="Discover how businesses across different industries use Flixby's AI phone assistant to transform customer interactions and streamline operations."
+        canonicalUrl="https://flixby.io/use-cases"
+      />
+      
       {/* Background elements */}
       <div className="fixed inset-0 bg-gray-900 z-0">
         <div className="absolute top-0 left-0 right-0 h-[40vh] bg-gradient-to-br from-purple-900/30 via-indigo-800/20 to-transparent"></div>

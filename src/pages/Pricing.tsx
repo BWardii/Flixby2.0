@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Check, X, CreditCard, Shield, Clock, Zap, DollarSign, PoundSterling, ChevronDown, ChevronUp, Phone, Bot, Users, MessageSquare, ChevronsRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 function Pricing() {
   const navigate = useNavigate();
@@ -200,7 +201,13 @@ function Pricing() {
   ];
 
   return (
-    <div className="pt-16">
+    <div className="bg-gray-900 pt-16">
+      <SEO 
+        title="Pricing Plans" 
+        description="Choose the perfect Flixby AI phone receptionist plan for your business. Flexible options from the free Starter tier to unlimited Premium, all with no hidden fees."
+        canonicalUrl="https://flixby.io/pricing"
+      />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden py-24">
         {/* Background Elements */}

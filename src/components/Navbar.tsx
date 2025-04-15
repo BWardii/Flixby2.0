@@ -74,7 +74,7 @@ function Navbar() {
     },
     { path: '/features', label: 'Features' },
     { path: '/pricing', label: 'Pricing' },
-    { path: '/about', label: 'About' },
+    { path: '/blog', label: 'Blog' },
     { path: '/contact', label: 'Contact' },
   ];
 

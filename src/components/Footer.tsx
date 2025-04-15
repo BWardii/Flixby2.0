@@ -44,6 +44,11 @@ function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/blog" className="text-gray-400 hover:text-white transition-colors">
+                  Blog
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">
                   Contact
                 </Link>
@@ -55,11 +60,6 @@ function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
-              <li>
-                <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
-                  About Us
-                </Link>
-              </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
                   Documentation

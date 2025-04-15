@@ -3,6 +3,7 @@ import { ArrowRight, Zap, Shield, Cpu, Bot, X, Phone, Clock, Users, CheckCircle,
 import AIAssistant from '../components/AIAssistant';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 interface DemoFormData {
   name: string;
@@ -148,6 +149,13 @@ function Home() {
 
   return (
     <div className="pt-16">
+      <SEO 
+        title="AI Phone Receptionist for Business" 
+        description="Flixby is an AI-powered phone receptionist that handles business calls 24/7, books appointments, answers questions, and ensures you never miss an opportunity."
+        canonicalUrl="https://flixby.io"
+        ogImage="/logos/flixby-og.png"
+      />
+
       {/* Hero Section */}
       <section className="relative min-h-[80vh] overflow-hidden">
         {/* Animated Background Elements */}
@@ -164,26 +172,19 @@ function Home() {
           backgroundPosition: 'center center',
         }}></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 md:py-18 lg:py-24 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center">
             {/* Left Column - Text Content */}
-            <div className="text-center lg:text-left space-y-8 animate-fade-in">
-              <div className="inline-block">
-                <div className="flex items-center justify-center lg:justify-start space-x-2 bg-gray-800/50 backdrop-blur-lg rounded-full px-4 py-2 mb-6 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300">
-                  <Phone className="h-5 w-5 text-purple-400" />
-                  <span className="text-sm text-gray-300">24/7 AI Receptionist</span>
-                </div>
-              </div>
-
+            <div className="text-center lg:text-left space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in">
               <div className="flex flex-col items-center lg:items-start space-y-2">
                 <img 
                   src="/flixby-logo.png" 
                   alt="Flixby Logo" 
-                  className="w-[300px] max-w-full h-auto"
+                  className="w-[250px] sm:w-[280px] md:w-[300px] max-w-full h-auto"
                 />
-                <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
                   AI Phone Receptionist for Your Business
-                </h2>
+                </h1>
               </div>
 
               <div className="space-y-4">
@@ -217,7 +218,7 @@ function Home() {
                   onClick={() => navigate('/sign-up')}
                   className="group bg-gradient-to-r from-green-500 to-teal-500 text-white px-8 py-3 rounded-full font-medium hover:from-green-600 hover:to-teal-600 transition-all duration-300 flex items-center transform hover:scale-105"
                 >
-                  Create an Agent in 30 seconds
+                  Create an Agent in 60 seconds
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                     
@@ -247,53 +248,53 @@ function Home() {
             </div>
 
             {/* Right Column - Phone Mockup */}
-            <div className="relative flex justify-center items-center">
+            <div className="relative flex justify-center items-center mt-2 sm:mt-0">
               {/* Label above phone */}
-              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 text-center">
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
+              <div className="absolute -top-8 sm:-top-10 md:-top-12 left-1/2 transform -translate-x-1/2 text-center">
+                <span className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
                   Try Our Sample Demo
                 </span>
               </div>
 
               {/* Phone Frame */}
               <div 
-                className="relative w-[320px] h-[650px] bg-gray-900 rounded-[3rem] border-8 border-gray-800 shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-500 cursor-pointer"
+                className="relative w-[260px] h-[530px] sm:w-[290px] sm:h-[590px] md:w-[320px] md:h-[650px] bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] border-8 border-gray-800 shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-500 cursor-pointer"
                 onClick={() => setShowAIAssistant(true)}
               >
                 {/* Notch */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-20"></div>
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 sm:w-28 md:w-32 h-5 sm:h-6 bg-gray-800 rounded-b-2xl z-20"></div>
                 
                 {/* Status Bar */}
-                <div className="absolute top-8 left-0 right-0 px-6 flex justify-between items-center text-xs text-gray-400">
+                <div className="absolute top-6 sm:top-7 md:top-8 left-0 right-0 px-4 sm:px-5 md:px-6 flex justify-between items-center text-[10px] sm:text-xs text-gray-400">
                   <span>9:41</span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 rounded-full bg-green-400 animate-pulse"></div>
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-green-400 animate-pulse"></div>
                     <span>Ready to Talk</span>
                   </div>
                 </div>
 
                 {/* Call Interface */}
-                <div className="relative h-full w-full bg-gradient-to-b from-gray-900 to-gray-800 p-6">
+                <div className="relative h-full w-full bg-gradient-to-b from-gray-900 to-gray-800 p-4 sm:p-5 md:p-6">
                   {/* Contact Info */}
-                  <div className="mt-12 text-center">
-                    <div className="relative w-24 h-24 mx-auto mb-4">
+                  <div className="mt-8 sm:mt-10 md:mt-12 text-center">
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-3 sm:mb-4">
                       <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full animate-pulse"></div>
                       <img
                         src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
                         alt="Sarah - AI Receptionist"
                         className="absolute inset-0 w-full h-full object-cover rounded-full border-4 border-gray-800"
                       />
-                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-400 rounded-full border-4 border-gray-800"></div>
+                      <div className="absolute bottom-0 right-0 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-green-400 rounded-full border-4 border-gray-800"></div>
                     </div>
-                    <h3 className="text-2xl font-semibold text-white mb-1">Sarah</h3>
-                    <p className="text-gray-400 text-sm">AI Receptionist</p>
+                    <h3 className="text-xl sm:text-2xl font-semibold text-white mb-1">Sarah</h3>
+                    <p className="text-gray-400 text-xs sm:text-sm">AI Receptionist</p>
                   </div>
 
                   {/* Call to Action */}
-                  <div className="mt-8 text-center">
-                    <p className="text-gray-300 mb-6">Click to start a conversation</p>
-                    <div className="w-16 h-16 mx-auto rounded-full bg-green-500 flex items-center justify-center animate-pulse">
-                      <Phone className="w-8 h-8 text-white" />
+                  <div className="mt-6 sm:mt-7 md:mt-8 text-center">
+                    <p className="text-gray-300 text-sm mb-4 sm:mb-5 md:mb-6">Click to start a conversation</p>
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto rounded-full bg-green-500 flex items-center justify-center animate-pulse">
+                      <Phone className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                     </div>
                   </div>
                 </div>
@@ -554,42 +555,80 @@ function Home() {
       )}
 
       {/* As Seen On Section */}
-      <section className="py-16 bg-gray-900/80 backdrop-blur-sm">
+      <section className="py-16 bg-gray-900/80 backdrop-blur-sm overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <span className="text-xl text-gray-200 font-medium">As seen on</span>
           </div>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-            <img 
-              src="/logos/therundown.png" 
-              alt="The Rundown" 
-              className="h-14 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-all duration-300 hover:scale-105"
-            />
-            <img 
-              src="/logos/scisworthy.png" 
-              alt="SciSworthy" 
-              className="h-14 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-all duration-300 hover:scale-105"
-            />
-            <img 
-              src="/logos/futuretools.png" 
-              alt="Future Tools" 
-              className="h-14 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-all duration-300 hover:scale-105"
-            />
-            <img 
-              src="/logos/futurepedia.png" 
-              alt="Futurepedia" 
-              className="h-14 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-all duration-300 hover:scale-105"
-            />
-            <img 
-              src="/logos/aiforthat.png" 
-              alt="There's an AI for that" 
-              className="h-14 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-all duration-300 hover:scale-105"
-            />
-            <img 
-              src="/logos/gpte.png" 
-              alt="GPTE" 
-              className="h-14 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-all duration-300 hover:scale-105"
-            />
+          
+          {/* Logo marquee - continuously scrolling logos */}
+          <div className="relative w-full overflow-hidden">
+            {/* First row of logos - moves left */}
+            <div className="flex animate-marquee whitespace-nowrap">
+              <div className="flex space-x-16 mx-8">
+                <img 
+                  src="/logos/therundown.png" 
+                  alt="The Rundown" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/scisworthy.png" 
+                  alt="SciSworthy" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/futuretools.png" 
+                  alt="Future Tools" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/futurepedia.png" 
+                  alt="Futurepedia" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/aiforthat.png" 
+                  alt="There's an AI for that" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/gpte.png" 
+                  alt="GPTE" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                {/* Duplicate logos to ensure continuous scrolling */}
+                <img 
+                  src="/logos/therundown.png" 
+                  alt="The Rundown" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/scisworthy.png" 
+                  alt="SciSworthy" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/futuretools.png" 
+                  alt="Future Tools" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/futurepedia.png" 
+                  alt="Futurepedia" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/aiforthat.png" 
+                  alt="There's an AI for that" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+                <img 
+                  src="/logos/gpte.png" 
+                  alt="GPTE" 
+                  className="h-14 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>

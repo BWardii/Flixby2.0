@@ -11,6 +11,7 @@ import {
   Loader2,
   HelpCircle
 } from 'lucide-react';
+import SEO from '../components/SEO';
 
 function Contact() {
   // Form state
@@ -106,6 +107,12 @@ function Contact() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Contact Us" 
+        description="Get in touch with the Flixby team for support, questions, or feedback. We're here to help with all your AI phone receptionist needs."
+        canonicalUrl="https://flixby.io/contact"
+      />
+      
       {/* Background elements */}
       <div className="fixed inset-0 bg-gray-900 z-0">
         <div className="absolute top-0 left-0 right-0 h-[40vh] bg-gradient-to-br from-blue-900/30 via-purple-800/20 to-transparent"></div>
