@@ -73,10 +73,15 @@ function CallLogs() {
   
   // Calculate total minutes from records
   const calculateTotalMinutes = (recordsList: StackbyRecord[]): number => {
-    return recordsList.reduce((total, record) => {
+    // First sum up all durations precisely
+    const exactTotalMinutes = recordsList.reduce((total, record) => {
       const duration = parseDuration(record.field?.["Duration"]);
       return total + duration;
     }, 0);
+    
+    // Extract just the whole minutes part (floor)
+    // For example: 6.17 minutes (6 min 10 sec) would return 6
+    return Math.floor(exactTotalMinutes);
   };
 
   // Fetch the user's assistant data
@@ -238,7 +243,7 @@ function CallLogs() {
     ? totalMinutes 
     : calculateTotalMinutes(filteredRecords);
 
-  return (
+    return (
     <div className="pt-20 sm:pt-24 p-4 sm:p-6 md:p-10 max-w-full overflow-x-hidden">
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}
@@ -279,16 +284,16 @@ function CallLogs() {
                 <div>
                   <p className="text-gray-400 text-sm mb-1">Total Minutes Used</p>
                   <div className="text-3xl font-bold text-white">
-                    {displayTotalMinutes.toFixed(2)}
+                    {displayTotalMinutes}
                   </div>
                   <p className="text-gray-300 text-sm mt-1">
                     {showAllRecords ? 'All assistants' : 'Your assistant only'}
                   </p>
-                </div>
+      </div>
                 <div className="p-3 bg-blue-900/40 rounded-lg">
                   <Clock className="h-7 w-7 text-blue-400" />
-                </div>
-              </div>
+            </div>
+          </div>
             </div>
             
             {/* Minutes Left Card - NEW */}
@@ -304,19 +309,19 @@ function CallLogs() {
                     ) : minutesLeft === -1 ? (
                       "Unlimited"
                     ) : (
-                      `${minutesLeft.toFixed(0)}`
+                      `${minutesLeft}`
                     )}
-                  </div>
+          </div>
                   <p className="text-gray-300 text-sm mt-1">
                     For current billing period
                   </p>
-                </div>
+            </div>
                 <div className="p-3 bg-green-900/40 rounded-lg">
                   <Clock3 className="h-7 w-7 text-green-400" />
-                </div>
-              </div>
-            </div>
-            
+          </div>
+        </div>
+      </div>
+
             {/* Number of Calls Card */}
             <div className="bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-800/40 backdrop-blur-sm p-6">
               <div className="flex items-start justify-between">
@@ -349,7 +354,7 @@ function CallLogs() {
                 {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-gray-500" />}
               </h2>
             </div>
-          </div>
+        </div>
 
           <div className="overflow-x-auto">
             {/* Table container with horizontal scroll on mobile */}
@@ -390,7 +395,7 @@ function CallLogs() {
                         Show All Calls
                       </button>
                     )}
-                  </div>
+            </div>
                 </div>
               ) : (
                 <table className="min-w-full divide-y divide-gray-700">

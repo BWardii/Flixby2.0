@@ -134,6 +134,7 @@ export async function calculateMinutesLeft(planId: string, assistantId: string, 
   }
   
   // Calculate minutes left
+  // We're getting just the whole minutes part (floor) from the CallLogs component
   const minutesLeft = Math.max(0, plan.callMinutes - (usedMinutes || 0));
   console.log(`Plan minutes: ${plan.callMinutes}, Used minutes: ${usedMinutes}, Minutes left: ${minutesLeft}`);
   return minutesLeft;
@@ -147,5 +148,6 @@ export function formatMinutesDisplay(minutes: number): string {
     return "Unlimited";
   }
   
-  return `${minutes.toFixed(0)} min`;
+  // Just show the whole number of minutes, no rounding needed since we've already floored
+  return `${Math.floor(minutes)} min`;
 } 

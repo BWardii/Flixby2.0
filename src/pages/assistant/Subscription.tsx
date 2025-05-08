@@ -4,6 +4,7 @@ import { getAssistant } from '../../lib/assistant';
 import { Assistant } from '../../lib/assistant';
 import { defaultPlans, Plan, calculateMinutesLeft, formatMinutesDisplay } from '../../lib/subscription';
 import { getAssistantUsageMinutes } from '../../lib/vapi';
+import { fetchCallLogsFromStackby } from '../../lib/stackby';
 
 function Subscription() {
   const [assistant, setAssistant] = useState<Assistant | null>(null);
@@ -13,6 +14,52 @@ function Subscription() {
   const [currency, setCurrency] = useState<'USD' | 'GBP'>('USD');
   const [totalMinutesUsed, setTotalMinutesUsed] = useState<number>(0);
   const [minutesLeft, setMinutesLeft] = useState<number | null>(null);
+
+  // Parse duration strings into minutes - copied from CallLogs component for consistency
+  const parseDuration = (durationStr: string | undefined): number => {
+    if (!durationStr) return 0;
+    
+    try {
+      // Format: "0min 16sec" or "0min 16s"
+      if (durationStr.includes('min') && (durationStr.includes('sec') || durationStr.includes('s'))) {
+        const minMatch = durationStr.match(/(\d+)min/);
+        const secMatch = durationStr.match(/(\d+)sec/) || durationStr.match(/(\d+)s/);
+        
+        const minutes = minMatch ? parseInt(minMatch[1]) : 0;
+        const seconds = secMatch ? parseInt(secMatch[1]) : 0;
+        
+        return minutes + (seconds / 60);
+      }
+      
+      // Format: "0.27" (decimal minutes)
+      if (!isNaN(parseFloat(durationStr))) {
+        return parseFloat(durationStr);
+      }
+      
+      // Format: "0:16" (mm:ss)
+      if (durationStr.includes(':')) {
+        const [minutes, seconds] = durationStr.split(':').map(part => parseInt(part));
+        return minutes + (seconds / 60);
+      }
+      
+      return 0;
+    } catch (err) {
+      console.error('Error parsing duration:', durationStr, err);
+      return 0;
+    }
+  };
+  
+  // Calculate total minutes - copied from CallLogs component for consistency
+  const calculateTotalMinutes = (recordsList: any[]): number => {
+    // First sum up all durations precisely
+    const exactTotalMinutes = recordsList.reduce((total, record) => {
+      const duration = parseDuration(record.field?.["Duration"]);
+      return total + duration;
+    }, 0);
+    
+    // Extract just the whole minutes part (floor)
+    return Math.floor(exactTotalMinutes);
+  };
 
   // Fetch assistant details and usage on component mount
   useEffect(() => {
@@ -26,23 +73,29 @@ function Subscription() {
         // For this demo, we'll just simulate that the user is on the free plan
         setCurrentPlan('starter');
         
-        // Fetch total minutes used for this assistant
+        // Fetch call logs to calculate minutes used - same method as CallLogs component
         if (assistantData?.assistant_id) {
           try {
-            const usedMinutes = await getAssistantUsageMinutes(assistantData.assistant_id);
-            console.log(`Fetched usage minutes for ${assistantData.assistant_id}: ${usedMinutes}`);
+            // Fetch all call logs from the API
+            const allCallLogs = await fetchCallLogsFromStackby();
+            
+            // Filter logs for this assistant
+            const assistantLogs = allCallLogs.filter(log => 
+              log["Assistant ID"] === assistantData.assistant_id || 
+              log.field?.["Assistant ID"] === assistantData.assistant_id
+            );
+            
+            // Calculate total minutes using the same method as CallLogs page
+            const usedMinutes = calculateTotalMinutes(assistantLogs);
             setTotalMinutesUsed(usedMinutes);
             
             // Calculate minutes left
-            console.log(`Calculating minutes left for plan: ${currentPlan}`);
-            const minutes = await calculateMinutesLeft('starter', assistantData.assistant_id, usedMinutes);
-            console.log(`Minutes left calculation result: ${minutes}`);
+            const minutes = await calculateMinutesLeft(currentPlan, assistantData.assistant_id, usedMinutes);
             setMinutesLeft(minutes);
           } catch (error) {
             console.error('Error fetching usage data:', error);
-            // Default to 0 on error
             setTotalMinutesUsed(0);
-            setMinutesLeft(0);
+            setMinutesLeft(30); // Default to plan limit on error
           }
         }
       } catch (error) {
@@ -168,7 +221,7 @@ function Subscription() {
                       <div>
                         <div className="text-gray-400 text-sm">Minutes Used</div>
                         <div className="text-xl font-semibold text-white">
-                          {totalMinutesUsed.toFixed(0)} min
+                          {totalMinutesUsed} min
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
                           Current billing period
@@ -193,7 +246,7 @@ function Subscription() {
                           ) : minutesLeft === -1 ? (
                             "Unlimited"
                           ) : (
-                            `${minutesLeft.toFixed(0)} min`
+                            `${minutesLeft} min`
                           )}
                         </div>
                         <div className="text-xs text-gray-400 mt-1">

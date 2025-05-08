@@ -6,6 +6,10 @@ import CryptoJS from 'crypto-js';
 import AIAssistant from './AIAssistant';
 import Confetti from 'react-confetti';
 
+// Import voice preview audio files
+import ameliaPreview from '../voices/voice_preview_amelia.mp3';
+import chrisPreview from '../voices/voice_preview_chris.mp3';
+
 // Use the creation API key
 const CREATION_API_KEY = 'b23dd722-a84d-4bb5-8f8d-463625277d41';
 
@@ -37,13 +41,120 @@ const OnboardingWizard = () => {
     businessDescription: '',
     targetCustomers: '',
     greetingPhrase: '',
-    voiceId: 'jennifer',
+    voiceId: 'amelia',
     additionalDetails: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdAssistantId, setCreatedAssistantId] = useState<string | null>(null);
+  const [audioPlaying, setAudioPlaying] = useState<string | null>(null);
   const totalSteps = 5; // Now includes a test step
+
+  // Voice audio preview objects
+  const audioRefs: { [key: string]: HTMLAudioElement } = {};
+
+  // Function to play voice preview
+  const playVoicePreview = (voiceId: string) => {
+    console.log(`Attempting to play voice preview for ${voiceId}`);
+    
+    // If the same voice is already playing, do nothing and return
+    if (audioPlaying === voiceId) {
+      console.log(`${voiceId} is already playing, doing nothing`);
+      return;
+    }
+    
+    // Stop any currently playing audio first
+    if (audioPlaying) {
+      console.log(`Stopping currently playing audio: ${audioPlaying}`);
+      stopAudioPlayback(audioPlaying);
+    }
+
+    console.log(`Setting up audio for ${voiceId}`);
+    
+    // If we don't have an audio ref yet for this voice, create one
+    if (!audioRefs[voiceId]) {
+      console.log(`Creating new audio for ${voiceId}`);
+      const audioSrc = voiceId === 'amelia' ? ameliaPreview : chrisPreview;
+      const audio = new Audio(audioSrc);
+      
+      // Ensure audio doesn't loop
+      audio.loop = false;
+      
+      // Clean up when audio ends
+      audio.onended = () => {
+        console.log(`Audio for ${voiceId} ended naturally`);
+        setAudioPlaying(null);
+      };
+      
+      // Also handle potential errors
+      audio.onerror = (e) => {
+        console.error(`Error playing ${voiceId} audio preview:`, e);
+        setAudioPlaying(null);
+      };
+      
+      audioRefs[voiceId] = audio;
+    } else {
+      console.log(`Using existing audio reference for ${voiceId}`);
+    }
+    
+    try {
+      // Reset the audio to start from the beginning
+      audioRefs[voiceId].currentTime = 0;
+      
+      console.log(`Playing audio for ${voiceId}`);
+      
+      // Play the requested voice sample
+      const playPromise = audioRefs[voiceId]?.play();
+      
+      // Handle the play promise to catch any autoplay restrictions
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log(`Audio for ${voiceId} started playing successfully`);
+            setAudioPlaying(voiceId);
+          })
+          .catch(error => {
+            console.error(`Audio playback failed for ${voiceId}:`, error);
+            setAudioPlaying(null);
+          });
+      } else {
+        console.log(`Play promise undefined for ${voiceId}, setting state directly`);
+        setAudioPlaying(voiceId);
+      }
+    } catch (error) {
+      console.error(`Exception trying to play audio for ${voiceId}:`, error);
+      setAudioPlaying(null);
+    }
+  };
+
+  // Add a function to explicitly stop audio playback
+  const stopAudioPlayback = (voiceId: string) => {
+    console.log(`Stopping audio for ${voiceId}`);
+    if (audioRefs[voiceId]) {
+      // More aggressive approach to stopping audio
+      try {
+        // First pause it
+        audioRefs[voiceId].pause();
+        
+        // Then reset to beginning
+        audioRefs[voiceId].currentTime = 0;
+        
+        // Remove any event listeners to prevent any callbacks
+        audioRefs[voiceId].onended = null;
+        audioRefs[voiceId].onerror = null;
+        
+        // For some browsers, calling load() after pause helps ensure audio stops completely
+        audioRefs[voiceId].load();
+        
+        console.log(`Audio for ${voiceId} should be stopped now`);
+      } catch (error) {
+        console.error(`Error stopping audio: ${error}`);
+      }
+    }
+    
+    // Always update UI state regardless of whether we found the audio ref
+    setAudioPlaying(null);
+  };
 
   // Industry templates for step 4
   const industryTemplates = {
@@ -145,6 +256,17 @@ Membership/Loyalty: {{DETAILS OF ANY MEMBERSHIP OR LOYALTY PROGRAMS}}.`
     }));
   };
 
+  // Map UI voice IDs to voice configuration for API request
+  const getVoiceConfig = (uiVoiceId: string): { provider: string; voiceId: string } => {
+    const voiceMapping: Record<string, { provider: string; voiceId: string }> = {
+      'jennifer': { provider: 'playht', voiceId: 'jennifer' },
+      'michael': { provider: 'playht', voiceId: 'michael' },
+      'amelia': { provider: '11labs', voiceId: 'ZF6FPAbjXT4488VcRRnw' },
+      'chris': { provider: '11labs', voiceId: 'UEKYgullGqaF0keqT8Bu' }
+    };
+    return voiceMapping[uiVoiceId] || { provider: 'playht', voiceId: 'jennifer' }; // Fallback to jennifer if not found
+  };
+
   const nextStep = () => {
     // Validate current step
     if (currentStep === 1) {
@@ -230,10 +352,7 @@ Additional details: ${formData.additionalDetails}`;
           model: "nova-2",
           language: "en-US"
         },
-        voice: {
-          provider: "playht",
-          voiceId: formData.voiceId
-        }
+        voice: getVoiceConfig(formData.voiceId)
       };
 
       // Generate signature using the creation API key
@@ -264,7 +383,7 @@ Additional details: ${formData.additionalDetails}`;
         first_message: formData.greetingPhrase,
         system_prompt: systemPrompt,
         language: "en-US",
-        voice_id: formData.voiceId,
+        voice_id: getVoiceConfig(formData.voiceId).voiceId,
         temperature: 0.7,
         assistant_id: data.id
       });
@@ -376,13 +495,47 @@ Additional details: ${formData.additionalDetails}`;
                 <label className="block text-sm font-medium text-gray-300 mb-3">
                   Choose a Voice
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Voice region selector tabs */}
+                <div className="mb-4">
+                  <div className="flex space-x-2 border-b border-gray-700/50">
+                    <button
+                      type="button"
+                      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors
+                        ${formData.voiceId === 'chris' || formData.voiceId === 'amelia' ? 
+                          'bg-purple-500/20 text-purple-400 border-b-2 border-purple-500' : 
+                          'text-gray-400 hover:text-gray-300'}`}
+                      onClick={() => handleVoiceSelect(formData.voiceId === 'chris' || formData.voiceId === 'amelia' ? formData.voiceId : 'amelia')}
+                    >
+                      <span className="flex items-center">
+                        <img src="/flags/gb.svg" alt="UK Flag" className="w-4 h-4 mr-2" /> 
+                        UK English
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors
+                        ${formData.voiceId === 'jennifer' || formData.voiceId === 'michael' ? 
+                          'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500' : 
+                          'text-gray-400 hover:text-gray-300'}`}
+                      onClick={() => handleVoiceSelect(formData.voiceId === 'jennifer' || formData.voiceId === 'michael' ? formData.voiceId : 'jennifer')}
+                    >
+                      <span className="flex items-center">
+                        <img src="/flags/us.svg" alt="US Flag" className="w-4 h-4 mr-2" /> 
+                        US English
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* US Voices - Only show when a US voice is selected */}
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${(formData.voiceId === 'jennifer' || formData.voiceId === 'michael') ? 'block' : 'hidden'}`}>
                   {/* Jennifer Voice Option */}
                   <div 
                     onClick={() => handleVoiceSelect('jennifer')}
                     className={`relative p-4 border rounded-xl cursor-pointer transition-all duration-300 ${
                       formData.voiceId === 'jennifer' 
-                        ? 'bg-purple-500/20 border-purple-500' 
+                        ? 'bg-blue-500/20 border-blue-500' 
                         : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
                     }`}
                   >
@@ -393,18 +546,18 @@ Additional details: ${formData.additionalDetails}`;
                           alt="Jennifer" 
                           className="w-full h-full object-cover"
                         />
-                        <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity ${formData.voiceId === 'jennifer' ? 'opacity-0' : 'opacity-0'}`}>
-                          <Volume2 className="w-8 h-8 text-white" />
+                        <div className="absolute top-0 right-0 m-0.5">
+                          <img src="/flags/us.svg" alt="US" className="w-5 h-5 rounded-full border border-gray-700" />
                         </div>
                       </div>
                       <div>
                         <h3 className="font-medium text-white">Jennifer</h3>
-                        <p className="text-sm text-gray-400">Professional female voice</p>
+                        <p className="text-sm text-gray-400">Professional female voice (US)</p>
                       </div>
                     </div>
                     
                     {formData.voiceId === 'jennifer' && (
-                      <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                         <CheckCircle className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -416,9 +569,17 @@ Additional details: ${formData.additionalDetails}`;
                     </div>
                     
                     <div className="mt-2 flex justify-center">
-                      <div className="w-3/4 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                        <div className="bg-purple-500 h-full w-full animate-pulse"></div>
-                      </div>
+                      <button 
+                        className="px-3 py-1.5 rounded-full text-sm font-medium flex items-center justify-center transition-all duration-300 bg-blue-500/20 border border-blue-500/50 text-blue-300 hover:bg-blue-500/30 hover:text-blue-200"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent click
+                          alert("US voice preview is not available yet.");
+                        }}
+                      >
+                        <Volume2 className="h-4 w-4 mr-1.5" />
+                        <span>Listen to sample</span>
+                      </button>
                     </div>
                   </div>
                   
@@ -438,13 +599,13 @@ Additional details: ${formData.additionalDetails}`;
                           alt="Michael" 
                           className="w-full h-full object-cover"
                         />
-                        <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity ${formData.voiceId === 'michael' ? 'opacity-0' : 'opacity-0'}`}>
-                          <Volume2 className="w-8 h-8 text-white" />
+                        <div className="absolute top-0 right-0 m-0.5">
+                          <img src="/flags/us.svg" alt="US" className="w-5 h-5 rounded-full border border-gray-700" />
                         </div>
                       </div>
                       <div>
                         <h3 className="font-medium text-white">Michael</h3>
-                        <p className="text-sm text-gray-400">Friendly male voice</p>
+                        <p className="text-sm text-gray-400">Friendly male voice (US)</p>
                       </div>
                     </div>
                     
@@ -461,9 +622,180 @@ Additional details: ${formData.additionalDetails}`;
                     </div>
                     
                     <div className="mt-2 flex justify-center">
-                      <div className="w-3/4 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                        <div className="bg-blue-500 h-full w-full animate-pulse"></div>
+                      <button 
+                        className="px-3 py-1.5 rounded-full text-sm font-medium flex items-center justify-center transition-all duration-300 bg-blue-500/20 border border-blue-500/50 text-blue-300 hover:bg-blue-500/30 hover:text-blue-200"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent click
+                          alert("US voice preview is not available yet.");
+                        }}
+                      >
+                        <Volume2 className="h-4 w-4 mr-1.5" />
+                        <span>Listen to sample</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UK Voices - Only show when a UK voice is selected */}
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${(formData.voiceId === 'amelia' || formData.voiceId === 'chris') ? 'block' : 'hidden'}`}>
+                  {/* Amelia Voice Option */}
+                  <div 
+                    onClick={() => handleVoiceSelect('amelia')}
+                    className={`relative p-4 border rounded-xl cursor-pointer transition-all duration-300 ${
+                      formData.voiceId === 'amelia' 
+                        ? 'bg-purple-500/20 border-purple-500' 
+                        : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-16 h-16 rounded-full overflow-hidden mr-3 relative">
+                        <img 
+                          src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80" 
+                          alt="Amelia" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-0 right-0 m-0.5">
+                          <img src="/flags/gb.svg" alt="UK" className="w-5 h-5 rounded-full border border-gray-700" />
+                        </div>
                       </div>
+                      <div>
+                        <h3 className="font-medium text-white">Amelia</h3>
+                        <p className="text-sm text-gray-400">Professional female voice (UK)</p>
+                      </div>
+                    </div>
+                    
+                    {formData.voiceId === 'amelia' && (
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    
+                    <div className="mt-3 text-sm text-gray-300">
+                      <span className="font-medium">"</span>
+                      <span className="italic">Hello, Amelia speaking. How might I help you today?</span>
+                      <span className="font-medium">"</span>
+                    </div>
+                    
+                    <div className="mt-2 flex justify-center">
+                      <button 
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center justify-center transition-all duration-300 ${
+                          audioPlaying === 'amelia' 
+                            ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 hover:text-red-300' 
+                            : 'bg-purple-500/20 border border-purple-500/50 text-purple-300 hover:bg-purple-500/30 hover:text-purple-200'
+                        }`}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent click
+                          e.preventDefault(); // Also prevent default behavior
+                          console.log(`Button clicked, current audio playing: ${audioPlaying}`);
+                          
+                          if (audioPlaying === 'amelia') {
+                            console.log('Should stop amelia audio');
+                            // Stop the current playing audio
+                            stopAudioPlayback('amelia');
+                          } else {
+                            console.log('Should play amelia audio');
+                            playVoicePreview('amelia');
+                          }
+                        }}
+                      >
+                        {audioPlaying === 'amelia' ? (
+                          <>
+                            <span className="h-4 w-4 mr-1.5 flex items-center justify-center">
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="2" width="10" height="10" rx="1" fill="currentColor" />
+                              </svg>
+                            </span>
+                            <span>Stop</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="h-4 w-4 mr-1.5" />
+                            <span>Listen to sample</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Chris Voice Option */}
+                  <div 
+                    onClick={() => handleVoiceSelect('chris')}
+                    className={`relative p-4 border rounded-xl cursor-pointer transition-all duration-300 ${
+                      formData.voiceId === 'chris' 
+                        ? 'bg-purple-500/20 border-purple-500' 
+                        : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-16 h-16 rounded-full overflow-hidden mr-3 relative">
+                        <img 
+                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80" 
+                          alt="Chris" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-0 right-0 m-0.5">
+                          <img src="/flags/gb.svg" alt="UK" className="w-5 h-5 rounded-full border border-gray-700" />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-white">Chris</h3>
+                        <p className="text-sm text-gray-400">Professional male voice (UK)</p>
+                      </div>
+                    </div>
+                    
+                    {formData.voiceId === 'chris' && (
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    
+                    <div className="mt-3 text-sm text-gray-300">
+                      <span className="font-medium">"</span>
+                      <span className="italic">Good day, Chris speaking. How may I be of service?</span>
+                      <span className="font-medium">"</span>
+                    </div>
+                    
+                    <div className="mt-2 flex justify-center">
+                      <button 
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center justify-center transition-all duration-300 ${
+                          audioPlaying === 'chris' 
+                            ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 hover:text-red-300' 
+                            : 'bg-purple-500/20 border border-purple-500/50 text-purple-300 hover:bg-purple-500/30 hover:text-purple-200'
+                        }`}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent click
+                          e.preventDefault(); // Also prevent default behavior
+                          console.log(`Button clicked, current audio playing: ${audioPlaying}`);
+                          
+                          if (audioPlaying === 'chris') {
+                            console.log('Should stop chris audio');
+                            // Stop the current playing audio
+                            stopAudioPlayback('chris');
+                          } else {
+                            console.log('Should play chris audio');
+                            playVoicePreview('chris');
+                          }
+                        }}
+                      >
+                        {audioPlaying === 'chris' ? (
+                          <>
+                            <span className="h-4 w-4 mr-1.5 flex items-center justify-center">
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="2" width="10" height="10" rx="1" fill="currentColor" />
+                              </svg>
+                            </span>
+                            <span>Stop</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="h-4 w-4 mr-1.5" />
+                            <span>Listen to sample</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -615,7 +947,17 @@ Additional details: ${formData.additionalDetails}`;
                 </div>
                 <div className="flex">
                   <span className="text-gray-400 w-32">Voice:</span>
-                  <span className="text-gray-200">{formData.voiceId === 'jennifer' ? 'Jennifer (Female)' : 'Michael (Male)'}</span>
+                  <span className="text-gray-200">
+                    {formData.voiceId === 'jennifer' 
+                     ? 'Jennifer (Female US)' 
+                     : formData.voiceId === 'michael' 
+                       ? 'Michael (Male US)'
+                       : formData.voiceId === 'amelia'
+                         ? 'Amelia (Female UK)'
+                         : formData.voiceId === 'chris'
+                           ? 'Chris (Male UK)'
+                           : 'Unknown Voice'}
+                  </span>
                 </div>
                 <div className="flex">
                   <span className="text-gray-400 w-32">Greeting:</span>

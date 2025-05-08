@@ -64,7 +64,7 @@ function Features() {
       features: [
         {
           icon: <Mic className="h-6 w-6 text-blue-400" />,
-          title: 'Natural Voice Interaction',
+      title: 'Natural Voice Interaction',
           description: 'Human-like voice interactions that feel natural and engaging',
           detailedDescription: 'Our advanced speech recognition technology understands natural speech patterns, accents, and colloquialisms with over 98% accuracy. The voice synthesis creates responses that sound remarkably human, with appropriate intonation, pacing, and emotional resonance.',
           techSpecs: [
@@ -480,7 +480,7 @@ function Features() {
                       </div>
                       <div>
                         <h4 className="text-xl font-semibold text-white mb-2">{feature.title}</h4>
-                        <p className="text-gray-400">{feature.description}</p>
+                <p className="text-gray-400">{feature.description}</p>
                       </div>
                     </div>
                     <div className="text-gray-400">
