@@ -72,12 +72,12 @@ function Pricing() {
       id: 'professional',
       name: 'Professional',
       priceUSD: {
-        monthly: '$189',
-        yearly: '$189'
+        monthly: '$130',
+        yearly: '$130'
       },
       priceGBP: {
-        monthly: '£149',
-        yearly: '£149'
+        monthly: '£99',
+        yearly: '£99'
       },
       description: 'For growing businesses',
       features: [
@@ -95,28 +95,29 @@ function Pricing() {
         'Downgrade anytime'
       ],
       originalPriceUSD: {
-        monthly: '$239',
-        yearly: '$239'
+        monthly: '$189',
+        yearly: '$189'
       },
       originalPriceGBP: {
-        monthly: '£179',
-        yearly: '£179'
+        monthly: '£149',
+        yearly: '£149'
       }
     },
     {
       id: 'premium',
       name: 'Premium',
       priceUSD: {
-        monthly: '$379',
-        yearly: '$379'
+        monthly: 'Coming Soon',
+        yearly: 'Coming Soon'
       },
       priceGBP: {
-        monthly: '£299',
-        yearly: '£299'
+        monthly: 'Coming Soon',
+        yearly: 'Coming Soon'
       },
       description: 'For larger organizations',
       features: [
-        'Unlimited calls',
+        'Clone your own real voice',
+        '500 minutes of calls per month',
         'Premium voice options',
         'Fastest response time',
         '24/7 priority support',
@@ -125,20 +126,12 @@ function Pricing() {
         'Custom integrations',
         'Dedicated account manager'
       ],
-      callMinutes: -1, // Unlimited
+      callMinutes: 500,
       highlighted: false,
       guarantees: [
         '14-day money-back guarantee',
         'Downgrade anytime'
-      ],
-      originalPriceUSD: {
-        monthly: '$479',
-        yearly: '$479'
-      },
-      originalPriceGBP: {
-        monthly: '£375',
-        yearly: '£375'
-      }
+      ]
     }
   ];
 
@@ -161,7 +154,8 @@ function Pricing() {
 
   // Comparison table data
   const comparisonFeatures: ComparisonFeature[] = [
-    { name: 'Call Minutes', starter: '30 minutes', professional: '120 minutes', premium: 'Unlimited', },
+    { name: 'Clone Your Own Real Voice', starter: false, professional: false, premium: '✨ Yes ✨', },
+    { name: 'Call Minutes', starter: '30 minutes', professional: '120 minutes', premium: '500 minutes', },
     { name: 'Voice Customization', starter: 'Basic', professional: 'Advanced', premium: 'Premium', },
     { name: 'Response Time', starter: 'Standard', professional: 'Fast', premium: 'Fastest', },
     { name: 'Support', starter: 'Email', professional: 'Priority Email', premium: '24/7 Priority', },
@@ -321,7 +315,12 @@ function Pricing() {
                   <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
                   
                   <div className="mb-6">
-                    {plan.id !== 'starter' && plan.originalPriceUSD ? (
+                    {plan.id === 'premium' ? (
+                      <div>
+                        <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Coming Soon</span>
+                        <div className="mt-2 text-sm text-gray-400">Join the waitlist for early access</div>
+                      </div>
+                    ) : plan.id !== 'starter' && plan.originalPriceUSD ? (
                       <>
                         <div className="flex items-center mb-2">
                           <span className="text-2xl font-medium text-gray-400 line-through mr-2">
@@ -340,32 +339,53 @@ function Pricing() {
                       <span className="text-4xl font-bold text-white">{getCurrentPrice(plan)}</span>
                     )}
                     
-                    {billingCycle === 'monthly' ? (
-                      <span className="text-gray-400 ml-2">/ month</span>
-                    ) : (
-                      <span className="text-gray-400 ml-2">/ year</span>
-                    )}
-                    
-                    {billingCycle === 'yearly' && !plan.originalPriceUSD && (
-                      <div className="mt-2 inline-block bg-green-500/20 text-green-400 text-xs font-medium px-2 py-1 rounded">
-                        Save {plan.id === 'professional' ? '17%' : '16%'} with annual billing
-                      </div>
+                    {plan.id !== 'premium' && (
+                      <>
+                        {billingCycle === 'monthly' ? (
+                          <span className="text-gray-400 ml-2">/ month</span>
+                        ) : (
+                          <span className="text-gray-400 ml-2">/ year</span>
+                        )}
+                        
+                        {billingCycle === 'yearly' && !plan.originalPriceUSD && (
+                          <div className="mt-2 inline-block bg-green-500/20 text-green-400 text-xs font-medium px-2 py-1 rounded">
+                            Save {plan.id === 'professional' ? '17%' : '16%'} with annual billing
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                   
                   <div className="border-t border-gray-700 my-6 pt-6">
                     <ul className="space-y-4">
                       {plan.features.map((feature, index) => (
-                        <li key={index} className="flex">
-                          <svg 
-                            className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
-                            stroke="currentColor"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span className="text-gray-300">{feature}</span>
+                        <li key={index} className={`flex ${feature.includes('Clone your own real voice') ? 
+                          'relative p-3 rounded-lg border border-transparent bg-gradient-to-r from-purple-900/60 to-blue-900/60 transform transition-all duration-300 shadow-lg group overflow-hidden mb-2' : 
+                          ''}`}>
+                          {feature.includes('Clone your own real voice') ? (
+                            <>
+                              {/* Animated glow effect background */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-purple-500/20 opacity-50 animate-pulse"></div>
+                              
+                              <div className="relative flex items-center">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-purple-300 to-blue-300 font-medium text-base">
+                                  {feature}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <svg 
+                                className="h-5 w-5 text-green-500 mr-2 flex-shrink-0"
+                                fill="none" 
+                                viewBox="0 0 24 24" 
+                                stroke="currentColor"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span className="text-gray-300">{feature}</span>
+                            </>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -395,10 +415,12 @@ function Pricing() {
                     className={`w-full py-3 px-6 rounded-xl flex items-center justify-center space-x-2 ${
                       plan.id === 'starter' 
                         ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                        : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium shadow-lg hover:shadow-purple-500/20'
+                        : plan.id === 'premium'
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg hover:shadow-purple-500/20'
+                          : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium shadow-lg hover:shadow-purple-500/20'
                     } transition-all duration-300`}
                   >
-                    <span>{plan.id === 'starter' ? 'Start for Free' : 'Choose Plan'}</span>
+                    <span>{plan.id === 'starter' ? 'Start for Free' : plan.id === 'premium' ? 'Join Waitlist' : 'Choose Plan'}</span>
                     <svg 
                       className="h-5 w-5 ml-1" 
                       viewBox="0 0 20 20" 
@@ -446,9 +468,21 @@ function Pricing() {
                 {comparisonFeatures.map((feature, index) => (
                   <tr 
                     key={index} 
-                    className={`${index % 2 === 0 ? 'bg-gray-800/20' : 'bg-transparent'}`}
+                    className={`${index % 2 === 0 ? 'bg-gray-800/20' : 'bg-transparent'} ${feature.name === 'Clone Your Own Real Voice' ? 'bg-gradient-to-r from-purple-900/40 to-blue-900/40 border-y border-purple-500/20' : ''}`}
                   >
-                    <td className="px-6 py-4 text-sm font-medium text-white">{feature.name}</td>
+                    <td className={`px-6 py-4 text-sm font-medium ${feature.name === 'Clone Your Own Real Voice' ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-purple-300 to-blue-300' : 'text-white'}`}>
+                      {feature.name === 'Clone Your Own Real Voice' ? (
+                        <div className="flex items-center">
+                          <svg className="h-4 w-4 text-yellow-300 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                          </svg>
+                          {feature.name}
+                          <span className="ml-2 px-2 py-0.5 text-[10px] rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold">NEW</span>
+                        </div>
+                      ) : (
+                        feature.name
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-center">
                       {typeof feature.starter === 'boolean' ? (
                         feature.starter ? 
@@ -467,13 +501,22 @@ function Pricing() {
                         <span className="text-gray-300">{feature.professional}</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className={`px-6 py-4 text-center ${feature.name === 'Clone Your Own Real Voice' ? 'relative' : ''}`}>
+                      {feature.name === 'Clone Your Own Real Voice' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-purple-500/10 opacity-50 animate-pulse"></div>
+                      )}
                       {typeof feature.premium === 'boolean' ? (
                         feature.premium ? 
-                          <Check className="h-5 w-5 text-green-400 mx-auto" /> : 
-                          <X className="h-5 w-5 text-gray-500 mx-auto" />
+                          <Check className="h-5 w-5 text-green-400 mx-auto relative z-10" /> : 
+                          <X className="h-5 w-5 text-gray-500 mx-auto relative z-10" />
                       ) : (
-                        <span className="text-gray-300">{feature.premium}</span>
+                        feature.name === 'Clone Your Own Real Voice' ? (
+                          <span className="inline-block py-1 px-3 rounded-full bg-gradient-to-r from-purple-900/60 to-blue-900/60 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-purple-300 to-blue-300 font-bold relative z-10">
+                            {feature.premium}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300 relative z-10">{feature.premium}</span>
+                        )
                       )}
                     </td>
                   </tr>
